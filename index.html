@@ -291,7 +291,8 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Nazwa (np. Bitcoin, Srebro)</label>
-                    <input type="text" id="asset-name" required class="w-full bg-gray-50 border border-gray-200 text-sm rounded-xl p-3 outline-none">
+                    <input type="text" id="asset-name" list="asset-name-suggestions" required class="w-full bg-gray-50 border border-gray-200 text-sm rounded-xl p-3 outline-none">
+                    <datalist id="asset-name-suggestions"></datalist>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
@@ -442,6 +443,15 @@
             if (uniqueAssets.includes(currentVal)) { select.value = currentVal; }
         }
 
+        function populateAssetNameSuggestions() {
+            const datalist = document.getElementById('asset-name-suggestions');
+            const uniqueAssets = [...new Set(records.map(r => r.name))].sort();
+            datalist.innerHTML = '';
+            uniqueAssets.forEach(a => {
+                datalist.innerHTML += `<option value="${a}">`;
+            });
+        }
+
         function renderAll() {
             localStorage.setItem('moChartTxs', JSON.stringify(records));
             localStorage.setItem('moChartGoals', JSON.stringify(goals));
@@ -450,6 +460,7 @@
             renderDashboard();
             renderResults();
             populateAssetFilter();
+            populateAssetNameSuggestions();
             renderHistory();
             renderGoals();
             if(currentTab === 'charts') renderCharts();
