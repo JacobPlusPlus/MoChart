@@ -2,7 +2,6 @@
 
 MoChart to nowoczesna, w pełni działająca w przeglądarce aplikacja typu Single Page Application (SPA) do śledzenia portfela inwestycyjnego. Pozwala na monitorowanie kryptowalut, ETF-ów, surowców, obligacji i gotówki w jednym, przejrzystym miejscu.
 
-(tu możesz wstawić zrzut ekranu swojej aplikacji)
 ✨ Główne funkcjonalności
 
     📊 Interaktywny Dashboard: Podgląd całkowitej wartości portfela, zainwestowanego kapitału oraz zysków i strat (w PLN i %).
