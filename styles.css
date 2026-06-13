@@ -1,0 +1,31 @@
+body { background-color: #f8fafc; color: #0f172a; -webkit-font-smoothing: antialiased; }
+
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fade-in-up { animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.fade-enter { animation: fadeInUp 0.3s ease-out forwards; }
+
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.animate-spin { animation: spin 1s linear infinite; }
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+.gradient-text {
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.tab-btn.active { color: #16a34a; border-bottom: 2px solid #16a34a; font-weight: 600; }
+.tab-btn { color: #64748b; border-bottom: 2px solid transparent; }
+
+progress { border-radius: 99px; height: 10px; }
+progress::-webkit-progress-bar { background-color: #e2e8f0; border-radius: 99px; }
+progress::-webkit-progress-value { background-color: #16a34a; border-radius: 99px; }
+
+progress.gold-progress::-webkit-progress-value { background-color: #f59e0b; border-radius: 99px; }
+progress.gold-progress::-moz-progress-bar { background-color: #f59e0b; border-radius: 99px; }
