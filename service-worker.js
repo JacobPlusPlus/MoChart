@@ -3,7 +3,12 @@ const URLS_TO_CACHE = [
   '/',
   '/index.html',
   '/assets/css/styles.css',
-  '/assets/js/app.js',
+  '/assets/js/main.js',
+  '/assets/js/ui.js',
+  '/assets/js/store.js',
+  '/assets/js/api.js',
+  '/assets/js/charts.js',
+  '/assets/js/utils.js',
   '/manifest.json',
   '/assets/icons/icon.png'
 ];
