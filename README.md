@@ -55,3 +55,9 @@ Aplikacja wykonuje zapytania sieciowe **wyłącznie** w celu pobrania aktualnych
 
 ---
 *Zbudowane z pasją do finansów i czystego kodu. 🚀*
+
+## 📸 Podgląd aplikacji
+
+<div align="center">
+  <img src="assets/screenshots/preview.png" alt="MoChart - Podgląd aplikacji" width="800">
+</div>
