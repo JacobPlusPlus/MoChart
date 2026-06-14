@@ -1,45 +1,57 @@
-📈 MoChart - Investment Portfolio Tracker
+# 📈 MoChart - Twój Prywatny Portfel Inwestycyjny
 
-MoChart to nowoczesna, w pełni działająca w przeglądarce aplikacja typu Single Page Application (SPA) do śledzenia portfela inwestycyjnego. Pozwala na monitorowanie kryptowalut, ETF-ów, surowców, obligacji i gotówki w jednym, przejrzystym miejscu.
+**MoChart** to szybka, nowoczesna i w 100% prywatna aplikacja webowa do śledzenia Twoich inwestycji. Nie korzysta z żadnego zewnętrznego backendu ani baz danych – wszystkie Twoje finansowe informacje są bezpieczne i zapisywane wyłącznie w pamięci Twojej przeglądarki (localStorage).
 
-✨ Główne funkcjonalności
+Dzięki wsparciu PWA (Progressive Web App), możesz zainstalować MoChart na swoim telefonie lub komputerze i korzystać z niej jak z natywnej aplikacji, nawet **bez dostępu do Internetu**!
 
-    📊 Interaktywny Dashboard: Podgląd całkowitej wartości portfela, zainwestowanego kapitału oraz zysków i strat (w PLN i %).
+---
 
-    🔄 Ceny na żywo (Live Prices): Automatyczne pobieranie aktualnych kursów kryptowalut (Binance API) oraz złota i srebra (Frankfurter API) z przeliczeniem USD/PLN.
+## ✨ Główne funkcje
 
-    🎯 Cele finansowe: Możliwość definiowania celów (np. "Zakup auta", "10k w Bitcoinie") i śledzenia postępów za pomocą dedykowanych pasków postępu.
+* 📊 **Wiele klas aktywów:** Śledź kryptowaluty (z cenami pobieranymi na żywo z API!), ETF-y, surowce, obligacje i gotówkę.
+* 🌙 **Dark Mode:** Elegancki tryb ciemny, który dba o Twoje oczy podczas wieczornego sprawdzania portfela.
+* 📱 **Wsparcie Offline (PWA):** Instaluj aplikację na ekranie głównym i przeglądaj dane w dowolnym miejscu.
+* 🎯 **Cele finansowe:** Wyznaczaj kwoty docelowe i obserwuj na żywo pasek postępu do ich realizacji.
+* 💾 **Import / Eksport:** Łatwy backup wszystkich transakcji i celów do jednego pliku `.json`. Twoje dane, pełna kontrola.
+* 📈 **Interaktywne Wykresy:** Piękne wizualizacje składu portfela i historii wartości za pomocą Chart.js.
+* 📑 **Paginacja Historii:** Płynne przeglądanie setek transakcji bez spadków wydajności.
 
-    📈 Zaawansowane wykresy: Wykresy kołowe struktury portfela (wg kategorii i platform) oraz wykres liniowy obrazujący zmianę wartości portfela w czasie.
+## 🛠 Technologie
 
-    🕒 Rejestr transakcji: Zapis historii zakupów i sprzedaży, wyliczanie średniej ceny zakupu dla poszczególnych aktywów oraz wygodne filtry (po dacie i nazwie aktywa).
+* **HTML5 & CSS3**
+* **Vanilla JavaScript** (bez ciężkich frameworków!)
+* **Tailwind CSS** (stylowanie i RWD)
+* **Chart.js** (wykresy)
+* **Phosphor Icons** (nowoczesne ikony)
 
-    💾 Pełna prywatność i kopie zapasowe: Dane zapisywane są lokalnie w Twojej przeglądarce (localStorage). Możesz łatwo eksportować je do pliku .json i importować na innym urządzeniu.
+## 🚀 Jak uruchomić projekt?
 
-🛠️ Technologie
+Projekt jest w 100% statyczny, co oznacza, że jego uruchomienie jest banalnie proste:
 
-Projekt został zbudowany z naciskiem na prostotę uruchomienia – nie wymaga żadnych narzędzi typu Node.js, Webpack czy zewnętrznej bazy danych.
+1. Sklonuj to repozytorium lub pobierz pliki `.zip`.
+2. Otwórz plik `index.html` w dowolnej nowoczesnej przeglądarce.
+3. *Gotowe!* *(Zalecana uwaga: Aby funkcja Service Worker (PWA) zadziałała na komputerze deweloperskim, uruchom projekt przez lokalny serwer, np. wtyczkę **Live Server** w VS Code).*
 
-    HTML5 & Vanilla JavaScript (logika aplikacji)
+## 📁 Struktura plików
 
-    Tailwind CSS (stylowanie poprzez CDN)
+\`\`\`text
+MoChart/
+├── assets/
+│   ├── css/
+│   │   └── styles.css
+│   ├── js/
+│   │   └── app.js
+│   └── icons/
+│       └── icon.png
+├── index.html
+├── manifest.json
+├── service-worker.js
+└── README.md
+\`\`\`
 
-    Chart.js (wykresy analityczne)
+## 🛡 Prywatność i Bezpieczeństwo
 
-    Phosphor Icons & CoinGecko API (ikony interfejsu i kryptowalut)
+Aplikacja wykonuje zapytania sieciowe **wyłącznie** w celu pobrania aktualnych kursów kryptowalut i metali szlachetnych (odpytuje publiczne API Binance oraz Gold-API). Żadne dane wprowadzane przez użytkownika nie opuszczają urządzenia.
 
-🚀 Jak uruchomić?
-
-Aplikacja jest gotowa do działania od razu po pobraniu!
-
-    Pobierz plik index.html na swój komputer.
-
-    Kliknij go dwukrotnie, aby otworzyć w dowolnej nowoczesnej przeglądarce (Chrome, Safari, Firefox, Edge).
-
-    Gotowe! Możesz zacząć dodawać swoje pierwsze transakcje.
-
-🔒 Prywatność
-
-MoChart to projekt Privacy-First. Twoje dane finansowe nie są nigdzie wysyłane (wywołania sieciowe służą wyłącznie do pobierania kursów aktywów). Cała baza danych znajduje się fizycznie na Twoim urządzeniu.
-
-Stworzone z dbałością o detale, by zarządzanie kapitałem było proste i przyjemne.
+---
+*Zbudowane z pasją do finansów i czystego kodu. 🚀*

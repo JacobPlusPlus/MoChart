@@ -6,7 +6,7 @@
     <title>MoChart - Twój Portfel Inwestycyjny</title>
 
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/icon.png">
     <meta name="apple-mobile-web-app-title" content="MoChart">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -36,7 +36,7 @@
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="assets/css/styles.css">
 </head>
 <body class="pb-24 dark:bg-gray-900 transition-colors duration-300">
 
@@ -177,19 +177,19 @@
         </div>
 
         <div id="view-history" class="space-y-6 fade-enter hidden">
-            <div class="bg-surface rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-50">
-                <div class="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6 border-b border-gray-100 pb-4">
+            <div class="bg-surface rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-50 dark:bg-gray-800 dark:border-gray-700">
+                <div class="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6 border-b border-gray-100 dark:border-gray-700 pb-4">
                     <div>
-                        <h2 class="text-2xl font-bold text-gray-900">Historia Transakcji</h2>
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Historia Transakcji</h2>
                         <p id="history-count" class="text-sm text-gray-400 mt-1"></p>
                     </div>
-                    <div class="flex items-center gap-2 bg-gray-50 p-2 rounded-xl border border-gray-200 flex-wrap">
-                        <select id="filter-asset" onchange="renderHistory()" class="bg-transparent text-sm text-gray-700 outline-none border-r border-gray-200 pr-2 mr-1">
+                    <div class="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 p-2 rounded-xl border border-gray-200 dark:border-gray-700 flex-wrap">
+                        <select id="filter-asset" onchange="renderHistory(true)" class="bg-transparent text-sm text-gray-700 dark:text-gray-300 outline-none border-r border-gray-200 dark:border-gray-700 pr-2 mr-1">
                             <option value="ALL">Wszystkie aktywa</option>
                         </select>
-                        <input type="date" id="filter-date-from" onchange="renderHistory()" class="bg-transparent text-sm text-gray-700 outline-none w-full md:w-auto">
+                        <input type="date" id="filter-date-from" onchange="renderHistory(true)" class="bg-transparent text-sm text-gray-700 dark:text-gray-300 outline-none w-full md:w-auto [color-scheme:light] dark:[color-scheme:dark]">
                         <span class="text-gray-400">-</span>
-                        <input type="date" id="filter-date-to" onchange="renderHistory()" class="bg-transparent text-sm text-gray-700 outline-none w-full md:w-auto">
+                        <input type="date" id="filter-date-to" onchange="renderHistory(true)" class="bg-transparent text-sm text-gray-700 dark:text-gray-300 outline-none w-full md:w-auto [color-scheme:light] dark:[color-scheme:dark]">
                         <button onclick="clearAllFilters()" class="text-gray-400 hover:text-red-500" title="Wyczyść filtry"><i class="ph-fill ph-x-circle"></i></button>
                     </div>
                 </div>
@@ -197,7 +197,7 @@
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse min-w-[800px]">
                         <thead>
-                            <tr class="text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100">
+                            <tr class="text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
                                 <th class="pb-3 font-semibold">Data</th>
                                 <th class="pb-3 font-semibold">Aktywo</th>
                                 <th class="pb-3 font-semibold">Typ</th>
@@ -209,6 +209,16 @@
                         </thead>
                         <tbody id="history-table" class="text-sm"></tbody>
                     </table>
+                </div>
+
+                <div id="pagination-controls" class="flex justify-between items-center mt-6 border-t border-gray-100 dark:border-gray-700 pt-4 hidden">
+                    <button id="btn-prev-page" onclick="changePage(-1)" class="flex items-center gap-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                        <i class="ph-bold ph-caret-left"></i> Poprzednia
+                    </button>
+                    <span id="page-indicator" class="text-sm font-medium text-gray-500 dark:text-gray-400">Strona 1 z 1</span>
+                    <button id="btn-next-page" onclick="changePage(1)" class="flex items-center gap-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                        Następna <i class="ph-bold ph-caret-right"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -376,6 +386,6 @@
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <script src="assets/js/app.js"></script>
 </body>
 </html>
