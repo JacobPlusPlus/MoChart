@@ -2,10 +2,10 @@ const CACHE_NAME = 'mochart-cache-v1';
 const URLS_TO_CACHE = [
   '/',
   '/index.html',
-  '/styles.css',
-  '/app.js',
+  '/assets/css/styles.css',
+  '/assets/js/app.js',
   '/manifest.json',
-  '/icon.png'
+  '/assets/icons/icon.png'
 ];
 
 // Instalacja Service Workera i dodawanie plików do pamięci podręcznej (Cache)
