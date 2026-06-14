@@ -29,3 +29,9 @@ progress::-webkit-progress-value { background-color: #16a34a; border-radius: 99p
 
 progress.gold-progress::-webkit-progress-value { background-color: #f59e0b; border-radius: 99px; }
 progress.gold-progress::-moz-progress-bar { background-color: #f59e0b; border-radius: 99px; }
+
+img[src*="cryptologos.cc"] {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+}
