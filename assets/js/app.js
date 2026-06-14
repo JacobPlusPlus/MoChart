@@ -88,7 +88,7 @@ function renderAll() {
     renderResults();
     populateAssetFilter();
     populateAssetNameSuggestions();
-    renderHistory();
+    renderHistory(true);
     renderGoals();
     if(currentTab === 'charts') renderCharts();
     populateGoalAssetSelect();
@@ -364,50 +364,88 @@ function openAssetDetails(name) {
     setTimeout(() => m.classList.remove('opacity-0'), 10);
 }
 
-// --- HISTORIA ---
+// --- HISTORIA I PAGINACJA ---
+let currentPage = 1;
+const itemsPerPage = 15;
+
 function clearAllFilters() {
     document.getElementById('filter-asset').value = 'ALL';
     document.getElementById('filter-date-from').value = '';
     document.getElementById('filter-date-to').value = '';
-    renderHistory();
+    renderHistory(true); // Argument 'true' resetuje do pierwszej strony
 }
 
-function renderHistory() {
+function changePage(direction) {
+    currentPage += direction;
+    renderHistory(false); // Zmieniamy stronę, ale zachowujemy filtry
+}
+
+function renderHistory(resetPage = false) {
     const tbody = document.getElementById('history-table');
+    const paginationControls = document.getElementById('pagination-controls');
     tbody.innerHTML = '';
     
+    // Jeśli wywołano z true (np. po zmianie filtru), wracamy na 1 stronę
+    if (resetPage) currentPage = 1;
+
     let asset = document.getElementById('filter-asset').value;
     let from = document.getElementById('filter-date-from').value;
     let to = document.getElementById('filter-date-to').value;
     let filtered = [...records].sort((a,b) => new Date(b.date) - new Date(a.date));
 
+    // Filtrowanie
     if(asset !== 'ALL') filtered = filtered.filter(r => r.name === asset);
     if(from) filtered = filtered.filter(r => new Date(r.date) >= new Date(from));
     if(to) filtered = filtered.filter(r => new Date(r.date) <= new Date(to));
 
-    document.getElementById('history-count').textContent = `Wyświetlono ${filtered.length} transakcji`;
+    // Paginacja
+    const totalItems = filtered.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+    
+    // Zabezpieczenie przed wyjściem poza zakres stron
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
 
-    if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="py-10 text-center text-gray-400"><i class="ph ph-magnifying-glass text-2xl mb-2 block"></i>Brak transakcji spełniających kryteria filtrowania.</td></tr>`;
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginated = filtered.slice(startIndex, endIndex);
+
+    // Wyświetlanie statystyk
+    document.getElementById('history-count').textContent = `Wyświetlono ${paginated.length} z ${totalItems} transakcji spełniających kryteria`;
+
+    // Ukrywanie/pokazywanie paginacji
+    if (totalItems > itemsPerPage) {
+        paginationControls.classList.remove('hidden');
+        document.getElementById('page-indicator').textContent = `Strona ${currentPage} z ${totalPages}`;
+        document.getElementById('btn-prev-page').disabled = currentPage === 1;
+        document.getElementById('btn-next-page').disabled = currentPage === totalPages;
+    } else {
+        paginationControls.classList.add('hidden');
+    }
+
+    // Renderowanie pustego stanu
+    if (paginated.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="py-10 text-center text-gray-400 dark:text-gray-500"><i class="ph ph-magnifying-glass text-2xl mb-2 block"></i>Brak transakcji spełniających kryteria filtrowania.</td></tr>`;
         return;
     }
 
-    filtered.forEach(r => {
-        const tColor = r.type === 'Sprzedaż' ? 'text-red-600 bg-red-50' : 'text-brand-600 bg-brand-50';
+    // Renderowanie wierszy
+    paginated.forEach(r => {
+        const tColor = r.type === 'Sprzedaż' ? 'text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400' : 'text-brand-600 bg-brand-50 dark:bg-brand-900/20 dark:text-brand-400';
         tbody.innerHTML += `
-            <tr class="border-b border-gray-50 hover:bg-gray-50 group">
-                <td class="py-4 text-gray-600 font-medium">${r.date}</td>
+            <tr class="border-b border-gray-50 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-800/50 group transition-colors">
+                <td class="py-4 text-gray-600 dark:text-gray-400 font-medium">${r.date}</td>
                 <td class="py-4">
-                    <div class="font-semibold text-gray-900">${r.name}</div>
+                    <div class="font-semibold text-gray-900 dark:text-gray-100">${r.name}</div>
                     ${r.notes ? `<div class="text-xs text-gray-400 mt-1"><i class="ph ph-chat-text"></i> ${r.notes}</div>` : ''}
                 </td>
                 <td class="py-4"><span class="px-2 py-1 rounded text-xs font-bold ${tColor}">${r.type}</span></td>
-                <td class="py-4 text-right">${numFmt.format(r.quantity)}</td>
-                <td class="py-4 text-right">${curFmt.format(r.investedPln || r.valuePln)}</td>
-                <td class="py-4 text-right font-semibold text-gray-900">${curFmt.format(r.valuePln)}</td>
+                <td class="py-4 text-right dark:text-gray-300">${numFmt.format(r.quantity)}</td>
+                <td class="py-4 text-right dark:text-gray-300">${curFmt.format(r.investedPln || r.valuePln)}</td>
+                <td class="py-4 text-right font-semibold text-gray-900 dark:text-gray-100">${curFmt.format(r.valuePln)}</td>
                 <td class="py-4 text-center">
-                    <button onclick="editRecord('${r.id}')" class="text-gray-400 hover:text-blue-500 p-1"><i class="ph-fill ph-pencil-simple text-lg"></i></button>
-                    <button onclick="deleteRecord('${r.id}')" class="text-gray-400 hover:text-red-500 p-1"><i class="ph-fill ph-trash text-lg"></i></button>
+                    <button onclick="editRecord('${r.id}')" class="text-gray-400 hover:text-blue-500 p-1 transition-colors"><i class="ph-fill ph-pencil-simple text-lg"></i></button>
+                    <button onclick="deleteRecord('${r.id}')" class="text-gray-400 hover:text-red-500 p-1 transition-colors"><i class="ph-fill ph-trash text-lg"></i></button>
                 </td>
             </tr>`;
     });
