@@ -8,13 +8,13 @@ const CATEGORIES = {
 };
 
 const CRYPTO_ICONS = {
-    'Bitcoin':  'https://assets.coingecko.com/coins/images/1/thumb/bitcoin.png',
-    'Ethereum': 'https://assets.coingecko.com/coins/images/279/thumb/ethereum.png',
-    'XRP':      'https://assets.coingecko.com/coins/images/44/thumb/xrp-symbol-white-128.png',
-    'BNB':      'https://assets.coingecko.com/coins/images/825/thumb/bnb-icon2_2x.png',
-    'USDC':     'https://assets.coingecko.com/coins/images/6319/thumb/usdc.png',
-    'USDT':     'https://assets.coingecko.com/coins/images/325/thumb/Tether.png',
-    'Solana':   'https://assets.coingecko.com/coins/images/4128/thumb/solana.png',
+    'Bitcoin':  'https://cryptologos.cc/logos/bitcoin-btc-logo.svg',
+    'Ethereum': 'https://cryptologos.cc/logos/ethereum-eth-logo.svg',
+    'XRP':      'https://cryptologos.cc/logos/xrp-xrp-logo.svg',
+    'BNB':      'https://cryptologos.cc/logos/bnb-bnb-logo.svg',
+    'USDC':     'https://cryptologos.cc/logos/usd-coin-usdc-logo.svg',
+    'USDT':     'https://cryptologos.cc/logos/tether-usdt-logo.svg',
+    'Solana':   'https://cryptologos.cc/logos/solana-sol-logo.svg',
 };
 
 function getAssetIconHTML(name, category, catCfg, sizeClass = 'w-10 h-10') {
@@ -113,39 +113,37 @@ function showToast(msg, type = 'success') {
 async function refreshCryptoPrices() {
     const spinIcons = document.querySelectorAll('.ph-arrows-clockwise');
     spinIcons.forEach(i => i.classList.add('animate-spin'));
-    
+
     try {
         showToast("Pobieranie cen...", "info");
+
         const fetchTicker = sym => fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${sym}`).then(r=>r.json()).catch(()=>null);
-        
+
         const [btc, eth, xrp, bnb, usd] = await Promise.all([
             fetchTicker('BTCUSDT'), fetchTicker('ETHUSDT'), fetchTicker('XRPUSDT'), fetchTicker('BNBUSDT'),
             fetch('https://open.er-api.com/v6/latest/USD').then(r=>r.json()).catch(()=>null)
         ]);
 
-        if(!usd || !usd.rates || !usd.rates.PLN) throw new Error("Błąd pobierania kursu USD");
-        const usdPln = usd.rates.PLN;
-
+        const usdPln = usd?.rates?.PLN || 4.0;
         if(btc) livePrices['Bitcoin'] = Number(btc.price) * usdPln;
         if(eth) livePrices['Ethereum'] = Number(eth.price) * usdPln;
         if(xrp) livePrices['XRP'] = Number(xrp.price) * usdPln;
         if(bnb) livePrices['BNB'] = Number(bnb.price) * usdPln;
 
-        const [silverRes, goldRes] = await Promise.all([
-            fetch('https://api.frankfurter.app/latest?from=XAG&to=PLN').then(r=>r.json()).catch(()=>null),
-            fetch('https://api.frankfurter.app/latest?from=XAU&to=PLN').then(r=>r.json()).catch(()=>null)
-        ]);
-        
-        if(silverRes?.rates?.PLN) livePrices['Srebro'] = silverRes.rates.PLN;
-        if(goldRes?.rates?.PLN) livePrices['Złoto'] = goldRes.rates.PLN;
+        // Pobieranie cen złota i srebra (XAU, XAG)
+        const metals = await fetch('https://api.gold-api.com/price/XAU,XAG').then(r=>r.json()).catch(()=>null);
+
+        if(metals && metals.XAU && metals.XAG) {
+            livePrices['Złoto'] = metals.XAU.price * usdPln;
+            livePrices['Srebro'] = metals.XAG.price * usdPln;
+        }
 
         const now = new Date();
         document.getElementById('last-price-update').innerText = `Ceny z: ${now.toLocaleTimeString('pl-PL')}`;
         renderAll();
-        showToast("Ceny zaktualizowane pomyślnie!", "success");
+        showToast("Ceny zaktualizowane!", "success");
     } catch (e) {
-        console.error(e);
-        showToast("Brak połączenia z API", "error");
+        showToast("Błąd połączenia", "error");
     } finally {
         spinIcons.forEach(i => i.classList.remove('animate-spin'));
     }
