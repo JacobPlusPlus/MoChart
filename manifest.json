@@ -2,7 +2,7 @@
   "name": "MoChart",
   "short_name": "MoChart",
   "description": "Twój osobisty tracker inwestycyjny dla kryptowalut i aktywów",
-  "start_url": "/index.html",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#f8fafc",
   "theme_color": "#22c55e",
