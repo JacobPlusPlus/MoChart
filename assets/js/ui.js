@@ -1,85 +1,12 @@
-// --- KONFIGURACJA ---
-const CATEGORIES = {
-    'Kryptowaluty': { icon: 'ph-currency-btc', color: '#8b5cf6', bgColor: 'bg-purple-100', iconColor: 'text-purple-600' },
-    'ETF': { icon: 'ph-trend-up', color: '#3b82f6', bgColor: 'bg-blue-100', iconColor: 'text-blue-600' },
-    'Surowce': { icon: 'ph-cube', color: '#94a3b8', bgColor: 'bg-slate-100', iconColor: 'text-slate-600' },
-    'Obligacje': { icon: 'ph-scroll', color: '#f59e0b', bgColor: 'bg-amber-100', iconColor: 'text-amber-600' },
-    'Gotówka': { icon: 'ph-money', color: '#10b981', bgColor: 'bg-emerald-100', iconColor: 'text-emerald-600' }
-};
+import { CATEGORIES, curFmt, numFmt, getAssetIconHTML } from './utils.js';
+import { records, goals, livePrices, getAggregatedPortfolio, setRecords, setGoals } from './store.js';
+import { renderCharts, updateChartColors } from './charts.js';
 
-const CRYPTO_ICONS = {
-    'Bitcoin':  'https://cryptologos.cc/logos/bitcoin-btc-logo.svg',
-    'Ethereum': 'https://cryptologos.cc/logos/ethereum-eth-logo.svg',
-    'XRP':      'https://cryptologos.cc/logos/xrp-xrp-logo.svg',
-    'BNB':      'https://cryptologos.cc/logos/bnb-bnb-logo.svg',
-    'USDC':     'https://cryptologos.cc/logos/usd-coin-usdc-logo.svg',
-    'USDT':     'https://cryptologos.cc/logos/tether-usdt-logo.svg',
-    'Solana':   'https://cryptologos.cc/logos/solana-sol-logo.svg',
-};
+export let currentTab = 'dashboard';
+export let currentPage = 1;
+export const itemsPerPage = 15;
 
-function getAssetIconHTML(name, category, catCfg, sizeClass = 'w-10 h-10') {
-    if (category === 'Kryptowaluty' && CRYPTO_ICONS[name]) {
-        return `<img src="${CRYPTO_ICONS[name]}" class="${sizeClass} rounded-full object-contain bg-gray-900 p-1 flex-shrink-0" onerror="this.outerHTML='<div class=\\'${sizeClass} rounded-full ${catCfg.bgColor} flex items-center justify-center ${catCfg.iconColor} flex-shrink-0\\'><i class=\\'ph-fill ph-currency-btc text-xl\\'></i></div>'">`;
-    }
-    return `<div class="${sizeClass} rounded-full ${catCfg.bgColor} flex items-center justify-center ${catCfg.iconColor} flex-shrink-0"><i class="ph-fill ${catCfg.icon} text-xl"></i></div>`;
-}
-
-const CHART_COLORS = ['#16a34a', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#64748b'];
-
-// --- STAN APLIKACJI ---
-let records = JSON.parse(localStorage.getItem('moChartTxs')) || [];
-let goals = JSON.parse(localStorage.getItem('moChartGoals')) || [];
-let livePrices = {}; 
-
-// Kompatybilność wsteczna
-records = records.map(r => ({ ...r, type: r.type || 'Zakup', notes: r.notes || '' }));
-
-let analysisChartInstance = null;
-let lineChartInstance = null;
-let breakdownChartInstance = null;
-let currentTab = 'dashboard';
-
-const curFmt = new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' });
-const numFmt = new Intl.NumberFormat('pl-PL', { maximumFractionDigits: 6 });
-
-document.addEventListener('DOMContentLoaded', () => {
-    // 1. Rejestracja Service Workera dla PWA
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/service-worker.js')
-            .then(reg => console.log('Service Worker zarejestrowany', reg))
-            .catch(err => console.error('Błąd rejestracji Service Workera', err));
-    }
-
-    // 2. Inicjalizacja Dark Mode
-    initTheme();
-
-    document.getElementById('asset-form').addEventListener('submit', handleTransactionSubmit);
-    document.getElementById('goal-form').addEventListener('submit', handleGoalSubmit);
-    renderAll();
-    
-    const savedTab = sessionStorage.getItem('moChartTab');
-    if(savedTab) switchTab(savedTab);
-});
-
-function populateAssetFilter() {
-    const select = document.getElementById('filter-asset');
-    const currentVal = select.value;
-    const uniqueAssets = [...new Set(records.map(r => r.name))].sort();
-    select.innerHTML = '<option value="ALL">Wszystkie aktywa</option>';
-    uniqueAssets.forEach(a => { select.innerHTML += `<option value="${a}">${a}</option>`; });
-    if (uniqueAssets.includes(currentVal)) { select.value = currentVal; }
-}
-
-function populateAssetNameSuggestions() {
-    const datalist = document.getElementById('asset-name-suggestions');
-    const uniqueAssets = [...new Set(records.map(r => r.name))].sort();
-    datalist.innerHTML = '';
-    uniqueAssets.forEach(a => {
-        datalist.innerHTML += `<option value="${a}">`;
-    });
-}
-
-function renderAll() {
+export function renderAll() {
     localStorage.setItem('moChartTxs', JSON.stringify(records));
     localStorage.setItem('moChartGoals', JSON.stringify(goals));
     
@@ -94,19 +21,7 @@ function renderAll() {
     populateGoalAssetSelect();
 }
 
-function switchTab(tabId) {
-    ['dashboard', 'results', 'charts', 'history', 'goals'].forEach(t => {
-        document.getElementById(`tab-${t}`).classList.remove('active');
-        document.getElementById(`view-${t}`).classList.add('hidden');
-    });
-    document.getElementById(`tab-${tabId}`).classList.add('active');
-    document.getElementById(`view-${tabId}`).classList.remove('hidden');
-    currentTab = tabId;
-    sessionStorage.setItem('moChartTab', tabId);
-    if(tabId === 'charts') renderCharts();
-}
-
-function showToast(msg, type = 'success') {
+export function showToast(msg, type = 'success') {
     const t = document.getElementById('toast');
     document.getElementById('toast-msg').textContent = msg;
     let icon = document.getElementById('toast-icon');
@@ -119,73 +34,37 @@ function showToast(msg, type = 'success') {
     setTimeout(() => t.classList.add('opacity-0'), 3000);
 }
 
-// --- POBIERANIE CEN KRYPTO + METALE SZLACHETNE ---
-async function refreshCryptoPrices() {
-    const spinIcons = document.querySelectorAll('.ph-arrows-clockwise');
-    spinIcons.forEach(i => i.classList.add('animate-spin'));
-
-    try {
-        showToast("Pobieranie cen...", "info");
-
-        const fetchTicker = sym => fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${sym}`).then(r=>r.json()).catch(()=>null);
-
-        const [btc, eth, xrp, bnb, usd] = await Promise.all([
-            fetchTicker('BTCUSDT'), fetchTicker('ETHUSDT'), fetchTicker('XRPUSDT'), fetchTicker('BNBUSDT'),
-            fetch('https://open.er-api.com/v6/latest/USD').then(r=>r.json()).catch(()=>null)
-        ]);
-
-        const usdPln = usd?.rates?.PLN || 4.0;
-        if(btc) livePrices['Bitcoin'] = Number(btc.price) * usdPln;
-        if(eth) livePrices['Ethereum'] = Number(eth.price) * usdPln;
-        if(xrp) livePrices['XRP'] = Number(xrp.price) * usdPln;
-        if(bnb) livePrices['BNB'] = Number(bnb.price) * usdPln;
-
-        // Pobieranie cen złota i srebra (XAU, XAG)
-        const metals = await fetch('https://api.gold-api.com/price/XAU,XAG').then(r=>r.json()).catch(()=>null);
-
-        if(metals && metals.XAU && metals.XAG) {
-            livePrices['Złoto'] = metals.XAU.price * usdPln;
-            livePrices['Srebro'] = metals.XAG.price * usdPln;
-        }
-
-        const now = new Date();
-        document.getElementById('last-price-update').innerText = `Ceny z: ${now.toLocaleTimeString('pl-PL')}`;
-        renderAll();
-        showToast("Ceny zaktualizowane!", "success");
-    } catch (e) {
-        showToast("Błąd połączenia", "error");
-    } finally {
-        spinIcons.forEach(i => i.classList.remove('animate-spin'));
-    }
-}
-
-// --- AGREGACJA DANYCH ---
-function getAggregatedPortfolio() {
-    const portfolio = {};
-    records.forEach(r => {
-        const key = r.name;
-        if(!portfolio[key]) portfolio[key] = { name: r.name, category: r.category, qty: 0, value: 0, invested: 0 };
-        
-        const factor = r.type === 'Sprzedaż' ? -1 : 1;
-        portfolio[key].qty += Number(r.quantity) * factor;
-        // Sumujemy fallback historyczny
-        portfolio[key].value += Number(r.valuePln) * factor;
-        portfolio[key].invested += Number(r.investedPln || r.valuePln) * factor;
+export function switchTab(tabId) {
+    ['dashboard', 'results', 'charts', 'history', 'goals'].forEach(t => {
+        document.getElementById(`tab-${t}`).classList.remove('active');
+        document.getElementById(`view-${t}`).classList.add('hidden');
     });
-    
-    // Aplikacja cen na żywo (bez nadpisywania rekordów)
-    return Object.values(portfolio).map(p => {
-        if(p.qty > 0 || p.value > 0) {
-            if(livePrices[p.name] !== undefined) {
-                p.value = p.qty * livePrices[p.name];
-            }
-            return p;
-        }
-        return null;
-    }).filter(p => p !== null && (p.qty > 0 || p.value > 0));
+    document.getElementById(`tab-${tabId}`).classList.add('active');
+    document.getElementById(`view-${tabId}`).classList.remove('hidden');
+    currentTab = tabId;
+    sessionStorage.setItem('moChartTab', tabId);
+    if(tabId === 'charts') renderCharts();
 }
 
-function updateHero() {
+export function populateAssetFilter() {
+    const select = document.getElementById('filter-asset');
+    const currentVal = select.value;
+    const uniqueAssets = [...new Set(records.map(r => r.name))].sort();
+    select.innerHTML = '<option value="ALL">Wszystkie aktywa</option>';
+    uniqueAssets.forEach(a => { select.innerHTML += `<option value="${a}">${a}</option>`; });
+    if (uniqueAssets.includes(currentVal)) { select.value = currentVal; }
+}
+
+export function populateAssetNameSuggestions() {
+    const datalist = document.getElementById('asset-name-suggestions');
+    const uniqueAssets = [...new Set(records.map(r => r.name))].sort();
+    datalist.innerHTML = '';
+    uniqueAssets.forEach(a => {
+        datalist.innerHTML += `<option value="${a}">`;
+    });
+}
+
+export function updateHero() {
     const aggregated = getAggregatedPortfolio();
     const totalValue = aggregated.reduce((sum, p) => sum + p.value, 0);
     const totalInvested = aggregated.reduce((sum, p) => sum + p.invested, 0);
@@ -207,8 +86,7 @@ function updateHero() {
     }
 }
 
-// --- DASHBOARD ---
-function renderDashboard() {
+export function renderDashboard() {
     const container = document.getElementById('dashboard-assets');
     container.innerHTML = '';
     const aggregated = getAggregatedPortfolio().sort((a,b) => b.value - a.value);
@@ -247,8 +125,7 @@ function renderDashboard() {
     });
 }
 
-// --- WYNIKI PER PLATFORMA ---
-function renderResults() {
+export function renderResults() {
     const tbody = document.getElementById('results-table');
     tbody.innerHTML = '';
 
@@ -276,14 +153,10 @@ function renderResults() {
         const data = platMap[p];
         let currentVal = 0;
         
-        // Przeliczanie przy użyciu cen live
         Object.keys(data.assets).forEach(aName => {
             const a = data.assets[aName];
-            if(livePrices[aName] !== undefined) {
-                currentVal += a.qty * livePrices[aName];
-            } else {
-                currentVal += a.val;
-            }
+            if(livePrices[aName] !== undefined) currentVal += a.qty * livePrices[aName];
+            else currentVal += a.val;
         });
         
         data.value = currentVal;
@@ -304,7 +177,6 @@ function renderResults() {
             </tr>`;
     });
 
-    // WIERSZ SUMA
     const totalProf = sumValue - sumInvested;
     const totalProfPct = sumInvested > 0 ? (totalProf/sumInvested)*100 : 0;
     const sColor = totalProf >= 0 ? 'text-brand-600' : 'text-red-600';
@@ -319,8 +191,7 @@ function renderResults() {
         </tr>`;
 }
 
-// --- SZCZEGÓŁY AKTYWA (MODAL) ---
-function openAssetDetails(name) {
+export function openAssetDetails(name) {
     const txs = records.filter(r => r.name === name).sort((a,b) => new Date(b.date) - new Date(a.date));
     let tQty = 0, tInv = 0, tValFallback = 0;
     
@@ -364,28 +235,23 @@ function openAssetDetails(name) {
     setTimeout(() => m.classList.remove('opacity-0'), 10);
 }
 
-// --- HISTORIA I PAGINACJA ---
-let currentPage = 1;
-const itemsPerPage = 15;
-
-function clearAllFilters() {
+export function clearAllFilters() {
     document.getElementById('filter-asset').value = 'ALL';
     document.getElementById('filter-date-from').value = '';
     document.getElementById('filter-date-to').value = '';
-    renderHistory(true); // Argument 'true' resetuje do pierwszej strony
+    renderHistory(true);
 }
 
-function changePage(direction) {
+export function changePage(direction) {
     currentPage += direction;
-    renderHistory(false); // Zmieniamy stronę, ale zachowujemy filtry
+    renderHistory(false);
 }
 
-function renderHistory(resetPage = false) {
+export function renderHistory(resetPage = false) {
     const tbody = document.getElementById('history-table');
     const paginationControls = document.getElementById('pagination-controls');
     tbody.innerHTML = '';
     
-    // Jeśli wywołano z true (np. po zmianie filtru), wracamy na 1 stronę
     if (resetPage) currentPage = 1;
 
     let asset = document.getElementById('filter-asset').value;
@@ -393,16 +259,13 @@ function renderHistory(resetPage = false) {
     let to = document.getElementById('filter-date-to').value;
     let filtered = [...records].sort((a,b) => new Date(b.date) - new Date(a.date));
 
-    // Filtrowanie
     if(asset !== 'ALL') filtered = filtered.filter(r => r.name === asset);
     if(from) filtered = filtered.filter(r => new Date(r.date) >= new Date(from));
     if(to) filtered = filtered.filter(r => new Date(r.date) <= new Date(to));
 
-    // Paginacja
     const totalItems = filtered.length;
     const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
     
-    // Zabezpieczenie przed wyjściem poza zakres stron
     if (currentPage > totalPages) currentPage = totalPages;
     if (currentPage < 1) currentPage = 1;
 
@@ -410,10 +273,8 @@ function renderHistory(resetPage = false) {
     const endIndex = startIndex + itemsPerPage;
     const paginated = filtered.slice(startIndex, endIndex);
 
-    // Wyświetlanie statystyk
     document.getElementById('history-count').textContent = `Wyświetlono ${paginated.length} z ${totalItems} transakcji spełniających kryteria`;
 
-    // Ukrywanie/pokazywanie paginacji
     if (totalItems > itemsPerPage) {
         paginationControls.classList.remove('hidden');
         document.getElementById('page-indicator').textContent = `Strona ${currentPage} z ${totalPages}`;
@@ -423,13 +284,11 @@ function renderHistory(resetPage = false) {
         paginationControls.classList.add('hidden');
     }
 
-    // Renderowanie pustego stanu
     if (paginated.length === 0) {
         tbody.innerHTML = `<tr><td colspan="7" class="py-10 text-center text-gray-400 dark:text-gray-500"><i class="ph ph-magnifying-glass text-2xl mb-2 block"></i>Brak transakcji spełniających kryteria filtrowania.</td></tr>`;
         return;
     }
 
-    // Renderowanie wierszy
     paginated.forEach(r => {
         const tColor = r.type === 'Sprzedaż' ? 'text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400' : 'text-brand-600 bg-brand-50 dark:bg-brand-900/20 dark:text-brand-400';
         tbody.innerHTML += `
@@ -451,187 +310,14 @@ function renderHistory(resetPage = false) {
     });
 }
 
-// --- WYKRESY ---
-function renderCharts() {
-    if(currentTab !== 'charts') return;
-    
-    // 1. WYKRES LINIOWY (Wartość Portfela)
-    const lineCtx = document.getElementById('lineChart').getContext('2d');
-    const timeFilter = document.getElementById('line-time-filter').value;
-    
-    // Historia zasobów chronologicznie
-    let dates = [...new Set(records.map(r => r.date))].sort();
-    let lineDataRaw = [];
-    let currentQty = {};
-    let currentInv = {};
-    
-    dates.forEach(d => {
-        records.filter(r => r.date === d).forEach(r => {
-            let factor = r.type === 'Sprzedaż' ? -1 : 1;
-            if(!currentQty[r.name]) currentQty[r.name] = 0;
-            if(!currentInv[r.name]) currentInv[r.name] = 0;
-            currentQty[r.name] += Number(r.quantity) * factor;
-            currentInv[r.name] += Number(r.investedPln || r.valuePln) * factor;
-        });
-        
-        let dailyValue = 0;
-        Object.keys(currentQty).forEach(name => {
-            let qty = currentQty[name];
-            if (qty > 0 || currentInv[name] > 0) {
-                if (livePrices[name] !== undefined) {
-                    dailyValue += qty * livePrices[name];
-                } else {
-                    dailyValue += currentInv[name];
-                }
-            }
-        });
-        lineDataRaw.push({ x: d, y: dailyValue });
-    });
-
-    // Filtry czasowe
-    if (timeFilter !== 'ALL') {
-        const cutoff = new Date();
-        if(timeFilter === '1M') cutoff.setMonth(cutoff.getMonth() - 1);
-        if(timeFilter === '3M') cutoff.setMonth(cutoff.getMonth() - 3);
-        if(timeFilter === '6M') cutoff.setMonth(cutoff.getMonth() - 6);
-        if(timeFilter === '1Y') cutoff.setFullYear(cutoff.getFullYear() - 1);
-        
-        const cutoffStr = cutoff.toISOString().split('T')[0];
-        lineDataRaw = lineDataRaw.filter(d => d.x >= cutoffStr);
-    }
-
-    if(lineChartInstance) lineChartInstance.destroy();
-    
-    let gradient = lineCtx.createLinearGradient(0, 0, 0, 300);
-    gradient.addColorStop(0, 'rgba(22, 163, 74, 0.4)');
-    gradient.addColorStop(1, 'rgba(22, 163, 74, 0)');
-
-    lineChartInstance = new Chart(lineCtx, {
-        type: 'line',
-        data: {
-            labels: lineDataRaw.map(d => d.x),
-            datasets: [{
-                label: 'Wartość Portfela',
-                data: lineDataRaw.map(d => d.y),
-                borderColor: '#16a34a',
-                backgroundColor: gradient,
-                borderWidth: 2,
-                tension: 0.4,
-                fill: true,
-                pointBackgroundColor: '#ffffff',
-                pointBorderColor: '#16a34a',
-                pointRadius: 3,
-                pointHoverRadius: 6
-            }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${curFmt.format(c.raw)}` } } },
-            scales: { y: { beginAtZero: false, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
-        }
-    });
-
-    // 2. WYKRES KOŁOWY / ANALIZA
-    const filter = document.getElementById('chart-filter').value;
-    const ctx = document.getElementById('analysisChart').getContext('2d');
-    const bdContainer = document.getElementById('crypto-breakdown-container');
-    const bdCtx = document.getElementById('cryptoBreakdownChart').getContext('2d');
-    
-    let aData = {}, totalA = 0;
-    const agg = getAggregatedPortfolio();
-
-    agg.forEach(p => {
-        let key = null;
-        if(filter === 'ALL_CAT') key = p.category;
-        else if(filter === 'ALL_PLAT') {
-            let platQtyMap = {};
-            let totalQty = 0;
-            records.filter(r => r.name === p.name).forEach(r => {
-                let factor = r.type === 'Sprzedaż' ? -1 : 1;
-                let q = Number(r.quantity) * factor;
-                platQtyMap[r.platform] = (platQtyMap[r.platform] || 0) + q;
-                totalQty += q;
-            });
-            
-            if (totalQty > 0) {
-                Object.keys(platQtyMap).forEach(plat => {
-                    if (platQtyMap[plat] > 0) {
-                        aData[plat] = (aData[plat] || 0) + (p.value * (platQtyMap[plat] / totalQty));
-                    }
-                });
-            } else {
-                // Fallback na wypadek gdy ilość to 0, ale wartość została (obliczanie po investedPln)
-                let platInvMap = {};
-                let totalInv = 0;
-                records.filter(r => r.name === p.name).forEach(r => {
-                    let factor = r.type === 'Sprzedaż' ? -1 : 1;
-                    let inv = Number(r.investedPln || r.valuePln) * factor;
-                    platInvMap[r.platform] = (platInvMap[r.platform] || 0) + inv;
-                    totalInv += inv;
-                });
-                if(totalInv > 0) {
-                    Object.keys(platInvMap).forEach(plat => {
-                        if (platInvMap[plat] > 0) {
-                            aData[plat] = (aData[plat] || 0) + (p.value * (platInvMap[plat] / totalInv));
-                        }
-                    });
-                }
-            }
-            return;
-        }
-        else if(p.category === filter) key = p.name;
-
-        if(key) { aData[key] = (aData[key] || 0) + p.value; }
-    });
-
-    totalA = Object.values(aData).reduce((s,v)=>s+v,0);
-
-    if(analysisChartInstance) analysisChartInstance.destroy();
-    const labels = Object.keys(aData);
-    const values = Object.values(aData);
-    const colors = labels.map((l, i) => filter === 'ALL_CAT' && CATEGORIES[l] ? CATEGORIES[l].color : CHART_COLORS[i % CHART_COLORS.length]);
-
-    analysisChartInstance = new Chart(ctx, {
-        type: 'doughnut',
-        data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 2 }] },
-        options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right' } } }
-    });
-
-    // Tabela podsumowująca
-    let statsHtml = `<div class="grid grid-cols-2 md:grid-cols-4 gap-4">`;
-    labels.forEach((l, i) => {
-        const pct = totalA > 0 ? ((values[i] / totalA) * 100).toFixed(1) : 0;
-        statsHtml += `
-            <div class="bg-gray-50 rounded-2xl p-4">
-                <div class="flex items-center gap-2 mb-2"><span class="w-3 h-3 rounded-full" style="background-color: ${colors[i]}"></span><span class="text-sm font-semibold truncate">${l}</span></div>
-                <div class="text-lg font-bold">${pct}%</div><div class="text-xs text-gray-500">${curFmt.format(values[i])}</div>
-            </div>`;
-    });
-    document.getElementById('analysis-stats').innerHTML = statsHtml + `</div>`;
-
-    // 3. CRYPTO BREAKDOWN
-    if(filter === 'Kryptowaluty') {
-        bdContainer.classList.remove('hidden');
-        if(breakdownChartInstance) breakdownChartInstance.destroy();
-        breakdownChartInstance = new Chart(bdCtx, {
-            type: 'bar',
-            data: { labels, datasets: [{ label: 'Wartość PLN', data: values, backgroundColor: colors }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-        });
-    } else {
-        bdContainer.classList.add('hidden');
-    }
-}
-
-// --- CELE FINANSOWE ---
-function populateGoalAssetSelect() {
+export function populateGoalAssetSelect() {
     const select = document.getElementById('goal-asset');
     select.innerHTML = '<option value="ALL">Cały Portfel</option>';
     const agg = getAggregatedPortfolio();
     agg.forEach(a => select.innerHTML += `<option value="${a.name}">${a.name}</option>`);
 }
 
-function renderGoals() {
+export function renderGoals() {
     const container = document.getElementById('goals-container');
     container.innerHTML = '';
     
@@ -680,8 +366,7 @@ function renderGoals() {
     });
 }
 
-// --- FORMULARZE I MODALE ---
-function openTransactionModal(editId = null) {
+export function openTransactionModal(editId = null) {
     document.getElementById('asset-form').reset();
     const title = document.getElementById('modal-title');
     
@@ -711,7 +396,7 @@ function openTransactionModal(editId = null) {
     setTimeout(() => m.classList.remove('opacity-0'), 10);
 }
 
-function openGoalModal() {
+export function openGoalModal() {
     document.getElementById('goal-form').reset();
     document.getElementById('goal-id').value = '';
     document.getElementById('goal-modal-title').textContent = "Dodaj Cel Finansowy";
@@ -720,15 +405,17 @@ function openGoalModal() {
     setTimeout(() => m.classList.remove('opacity-0'), 10);
 }
 
-function closeModals() {
-    ['asset-modal', 'goal-modal', 'asset-details-modal'].forEach(id => {
+export function closeModals() {
+    ['asset-modal', 'goal-modal', 'asset-details-modal', 'settings-modal'].forEach(id => {
         const m = document.getElementById(id);
-        m.classList.add('opacity-0');
-        setTimeout(() => m.classList.add('hidden'), 300);
+        if(m) {
+            m.classList.add('opacity-0');
+            setTimeout(() => m.classList.add('hidden'), 300);
+        }
     });
 }
 
-function handleTransactionSubmit(e) {
+export function handleTransactionSubmit(e) {
     e.preventDefault();
     const id = document.getElementById('asset-id').value || crypto.randomUUID();
     const type = document.getElementById('asset-type').value;
@@ -743,15 +430,16 @@ function handleTransactionSubmit(e) {
     const notes = document.getElementById('asset-notes').value;
 
     const isEdit = records.some(r => r.id === id);
-    records = records.filter(r => r.id !== id);
-    records.push({ id, type, date, category, platform, name, quantity, valuePln, investedPln, notes });
+    const newRecords = records.filter(r => r.id !== id);
+    newRecords.push({ id, type, date, category, platform, name, quantity, valuePln, investedPln, notes });
+    setRecords(newRecords);
 
     closeModals();
     renderAll();
     showToast(isEdit ? "Transakcja zaktualizowana!" : "Transakcja zapisana!");
 }
 
-function handleGoalSubmit(e) {
+export function handleGoalSubmit(e) {
     e.preventDefault();
     const idInput = document.getElementById('goal-id').value;
     const id = idInput || crypto.randomUUID();
@@ -761,18 +449,25 @@ function handleGoalSubmit(e) {
     const targetDate = document.getElementById('goal-date').value;
 
     const isEdit = goals.some(g => g.id === id);
-    goals = goals.filter(g => g.id !== id);
-    goals.push({ id, name, targetAmount, assetName, targetDate });
+    const newGoals = goals.filter(g => g.id !== id);
+    newGoals.push({ id, name, targetAmount, assetName, targetDate });
+    setGoals(newGoals);
     
     closeModals();
     renderAll();
     showToast(isEdit ? "Cel zaktualizowany!" : "Cel dodany!");
 }
 
-function editRecord(id) { openTransactionModal(id); }
-function deleteRecord(id) { if(confirm('Usunąć ten wpis?')) { records = records.filter(r => r.id !== id); renderAll(); showToast("Usunięto"); } }
+export function editRecord(id) { openTransactionModal(id); }
+export function deleteRecord(id) { 
+    if(confirm('Usunąć ten wpis?')) { 
+        setRecords(records.filter(r => r.id !== id)); 
+        renderAll(); 
+        showToast("Usunięto"); 
+    } 
+}
 
-function editGoal(id) {
+export function editGoal(id) {
     const g = goals.find(x => x.id === id);
     if (g) {
         document.getElementById('goal-form').reset();
@@ -791,10 +486,15 @@ function editGoal(id) {
         setTimeout(() => m.classList.remove('opacity-0'), 10);
     }
 }
-function deleteGoal(id) { if(confirm('Usunąć ten cel?')) { goals = goals.filter(g => g.id !== id); renderAll(); showToast("Usunięto cel"); } }
+export function deleteGoal(id) { 
+    if(confirm('Usunąć ten cel?')) { 
+        setGoals(goals.filter(g => g.id !== id)); 
+        renderAll(); 
+        showToast("Usunięto cel"); 
+    } 
+}
 
-// --- EXPORT / IMPORT ---
-function exportData() {
+export function exportData() {
     const data = { transactions: records, goals: goals };
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
     const a = document.createElement('a'); a.href = dataStr; a.download = `MoChart_Backup_${new Date().toISOString().split('T')[0]}.json`;
@@ -802,33 +502,32 @@ function exportData() {
     showToast("Zapisano na dysku!");
 }
 
-function handleImport(e) {
+export function handleImport(e) {
     const file = e.target.files[0]; if(!file) return;
     const reader = new FileReader();
     reader.onload = function(evt) {
         try {
             let imported = JSON.parse(evt.target.result);
-            if(Array.isArray(imported)) { records = imported; goals = []; } 
-            else { records = imported.transactions || []; goals = imported.goals || []; }
+            if(Array.isArray(imported)) { setRecords(imported); setGoals([]); } 
+            else { setRecords(imported.transactions || []); setGoals(imported.goals || []); }
             
-            records = records.map(r => ({ ...r, type: r.type || 'Zakup', notes: r.notes || '' }));
-            renderAll(); showToast("Wczytano plik!");
+            setRecords(records.map(r => ({ ...r, type: r.type || 'Zakup', notes: r.notes || '' })));
+            renderAll(); 
+            showToast("Wczytano plik!");
         } catch(err) { showToast("Błąd odczytu JSON.", "error"); }
         document.getElementById('file-import').value = ''; 
     };
     reader.readAsText(file);
 }
 
-// --- USTAWIENIA I DARK MODE ---
-function openSettingsModal() {
+export function openSettingsModal() {
     updateThemeIcon();
     const m = document.getElementById('settings-modal');
     m.classList.remove('hidden');
     setTimeout(() => m.classList.remove('opacity-0'), 10);
 }
 
-function initTheme() {
-    // Sprawdzanie wyboru użytkownika lub preferencji systemowych
+export function initTheme() {
     if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
         document.documentElement.classList.add('dark');
     } else {
@@ -838,7 +537,7 @@ function initTheme() {
     updateChartColors();
 }
 
-function toggleTheme() {
+export function toggleTheme() {
     document.documentElement.classList.toggle('dark');
     if (document.documentElement.classList.contains('dark')) {
         localStorage.setItem('theme', 'dark');
@@ -849,7 +548,7 @@ function toggleTheme() {
     updateChartColors();
 }
 
-function updateThemeIcon() {
+export function updateThemeIcon() {
     const icon = document.getElementById('theme-icon');
     if (icon) {
         if (document.documentElement.classList.contains('dark')) {
@@ -857,39 +556,5 @@ function updateThemeIcon() {
         } else {
             icon.className = 'ph-fill ph-sun text-xl text-amber-500';
         }
-    }
-}
-
-// Globalna aktualizacja kolorów wykresów w Chart.js
-function updateChartColors() {
-    const isDark = document.documentElement.classList.contains('dark');
-    const textColor = isDark ? '#9ca3af' : '#64748b'; // Szary tekst
-    const gridColor = isDark ? '#374151' : '#f1f5f9'; // Szare linie siatki
-
-    Chart.defaults.color = textColor;
-
-    if (lineChartInstance) {
-        lineChartInstance.options.scales.x.grid.color = gridColor;
-        lineChartInstance.options.scales.y.grid.color = gridColor;
-        lineChartInstance.update();
-    }
-    if (analysisChartInstance) {
-        analysisChartInstance.update();
-    }
-    if (breakdownChartInstance) {
-        breakdownChartInstance.options.scales.x.grid.color = gridColor;
-        breakdownChartInstance.options.scales.y.grid.color = gridColor;
-        breakdownChartInstance.update();
-    }
-}
-
-// Zmodyfikuj oryginalną funkcję `closeModals`, aby obsługiwała nowe okno
-const originalCloseModals = closeModals;
-window.closeModals = function() {
-    originalCloseModals(); // Wywołuje istniejący kod dla starych okien
-    const settings = document.getElementById('settings-modal');
-    if(settings) {
-        settings.classList.add('opacity-0');
-        setTimeout(() => settings.classList.add('hidden'), 300);
     }
 }
