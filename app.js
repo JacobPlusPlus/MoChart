@@ -43,6 +43,16 @@ const curFmt = new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PL
 const numFmt = new Intl.NumberFormat('pl-PL', { maximumFractionDigits: 6 });
 
 document.addEventListener('DOMContentLoaded', () => {
+    // 1. Rejestracja Service Workera dla PWA
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/service-worker.js')
+            .then(reg => console.log('Service Worker zarejestrowany', reg))
+            .catch(err => console.error('Błąd rejestracji Service Workera', err));
+    }
+
+    // 2. Inicjalizacja Dark Mode
+    initTheme();
+
     document.getElementById('asset-form').addEventListener('submit', handleTransactionSubmit);
     document.getElementById('goal-form').addEventListener('submit', handleGoalSubmit);
     renderAll();
@@ -769,4 +779,79 @@ function handleImport(e) {
         document.getElementById('file-import').value = ''; 
     };
     reader.readAsText(file);
+}
+
+// --- USTAWIENIA I DARK MODE ---
+function openSettingsModal() {
+    updateThemeIcon();
+    const m = document.getElementById('settings-modal');
+    m.classList.remove('hidden');
+    setTimeout(() => m.classList.remove('opacity-0'), 10);
+}
+
+function initTheme() {
+    // Sprawdzanie wyboru użytkownika lub preferencji systemowych
+    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+    updateThemeIcon();
+    updateChartColors();
+}
+
+function toggleTheme() {
+    document.documentElement.classList.toggle('dark');
+    if (document.documentElement.classList.contains('dark')) {
+        localStorage.setItem('theme', 'dark');
+    } else {
+        localStorage.setItem('theme', 'light');
+    }
+    updateThemeIcon();
+    updateChartColors();
+}
+
+function updateThemeIcon() {
+    const icon = document.getElementById('theme-icon');
+    if (icon) {
+        if (document.documentElement.classList.contains('dark')) {
+            icon.className = 'ph-fill ph-moon text-xl text-indigo-400';
+        } else {
+            icon.className = 'ph-fill ph-sun text-xl text-amber-500';
+        }
+    }
+}
+
+// Globalna aktualizacja kolorów wykresów w Chart.js
+function updateChartColors() {
+    const isDark = document.documentElement.classList.contains('dark');
+    const textColor = isDark ? '#9ca3af' : '#64748b'; // Szary tekst
+    const gridColor = isDark ? '#374151' : '#f1f5f9'; // Szare linie siatki
+
+    Chart.defaults.color = textColor;
+
+    if (lineChartInstance) {
+        lineChartInstance.options.scales.x.grid.color = gridColor;
+        lineChartInstance.options.scales.y.grid.color = gridColor;
+        lineChartInstance.update();
+    }
+    if (analysisChartInstance) {
+        analysisChartInstance.update();
+    }
+    if (breakdownChartInstance) {
+        breakdownChartInstance.options.scales.x.grid.color = gridColor;
+        breakdownChartInstance.options.scales.y.grid.color = gridColor;
+        breakdownChartInstance.update();
+    }
+}
+
+// Zmodyfikuj oryginalną funkcję `closeModals`, aby obsługiwała nowe okno
+const originalCloseModals = closeModals;
+window.closeModals = function() {
+    originalCloseModals(); // Wywołuje istniejący kod dla starych okien
+    const settings = document.getElementById('settings-modal');
+    if(settings) {
+        settings.classList.add('opacity-0');
+        setTimeout(() => settings.classList.add('hidden'), 300);
+    }
 }
